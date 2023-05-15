@@ -6,7 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <h2 style="color:green">Hospital Scheduling System</h2>
+                        <h2>Hospital Scheduling System</h2>
                     </a>
                 </div>
 
@@ -15,11 +15,11 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('dashboard') }}">
+                    <x-nav-link href="{{ route('calendar.depschedule') }}" :active="request()->routeIs('calendar.depschedule')">
                         {{ __('Schedule') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('dashboard') }}">
-                        {{ __('Application') }}
+                    <x-nav-link href="{{ route('calendar.leave') }}" :active="request()->routeIs('calendar.leave')">
+                        {{ __('Form Application') }}
                     </x-nav-link>
                     <x-nav-link href="{{ route('dashboard') }}">
                         {{ __('News') }}
