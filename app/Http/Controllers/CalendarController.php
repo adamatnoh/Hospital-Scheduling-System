@@ -25,7 +25,7 @@ class CalendarController extends Controller
         $schedule = DepartmentSchedule::all();
         foreach($schedule as $schedule) {
             $events[] = [
-                'title' => $schedule->name,
+                'title' => $schedule->title,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
                 'allDay' => true
@@ -43,6 +43,8 @@ class CalendarController extends Controller
 
         $schedule = LeaveApplication::create([
             'title' => $request->title,
+            'user_id' => $request->user_id,
+            'department' => $request->department,
             'reason' => $request->reason,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
@@ -60,6 +62,8 @@ class CalendarController extends Controller
 
         $schedule = OnCallApplication::create([
             'title' => $request->title,
+            'user_id' => $request->user_id,
+            'department' => $request->department,
             'reason' => $request->reason,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,

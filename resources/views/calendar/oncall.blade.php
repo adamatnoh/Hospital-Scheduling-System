@@ -58,18 +58,17 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">Please provide your reason</h5>
+                <h5 class="modal-title" id="exampleModalLongTitle">On Call Application</h5>
                 <button type="button" class="close"data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
                 </div>
                 <div class="modal-body">
-                    <input type="text" class="form-control" id="reason">
-                    <span id="titleError" class="text-danger"></span>
-                </div>
+                    <p>Are you sure?</p>
+                  </div>
                 <div class="modal-footer">
-                <button id='closeModal' type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                <button type="button" id="saveBtn" class="btn btn-primary">Save changes</button>
+                <button id="saveBtn" class="btn btn-primary">Yes</button>
+                <button id='closeModal' class="btn btn-danger" data-bs-dismiss="modal">No</button>
                 </div>
             </div>
             </div>
@@ -125,7 +124,8 @@
 
                         $('#saveBtn').click(function() {
                             var title = "{{ Auth::user()->name }}";
-                            // var title = "Adam";
+                            var user_id = "{{ Auth::user()->id }}";
+                            var department = "{{ Auth::user()->department }}";
                             var reason = $('#reason').val();
                             var start_date = moment(start).format('YYYY-MM-DD');
                             var end_date = moment(end).format('YYYY-MM-DD');
@@ -135,12 +135,13 @@
                                 url:"{{ route('calendar.storeOnCall') }}",
                                 type:"POST",
                                 dataType:'json',
-                                data:{ title, reason, start_date, end_date, status },
+                                data:{ title, user_id, department, reason, start_date, end_date, status },
                                 success:function(response)
                                 {
                                     $('#modalReason').modal('hide')
                                     $('#calendar').fullCalendar('renderEvent', {
                                         'title': response.title,
+                                        'department': response.department,
                                         'reason': response.reason,
                                         'start' : response.start,
                                         'end'  : response.end,

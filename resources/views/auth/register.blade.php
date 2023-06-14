@@ -13,8 +13,6 @@
                 <x-authentication-card-logo />
             </x-slot>
 
-            <x-validation-errors class="mb-4" />
-
             <form method="POST" action="{{ route('register') }}">
                 @csrf
 
@@ -25,6 +23,30 @@
                 <div>
                     <x-label for="name" class="label" value="{{ __('Name') }}" /><br>
                     <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Enter your username" />
+                </div>
+
+                <div>
+                    <x-input id="role" type="hidden" value="regular" />
+                </div>
+
+                {{-- <div class="mt-4">
+                    <x-label for="department" value="{{ __('Department') }}" /><br>
+                    <x-input id="department" class="block mt-1 w-full" type="text" name="department" :value="old('department')" required autofocus autocomplete="department" placeholder="Enter your department" />
+                </div> --}}
+                <div class="col-span-6 sm:col-span-4 mt-4">
+                    <x-label for="department" value="{{ __('Department') }}" /><br>
+                    <select name="department" id="department" class="block w-full mt-1"
+                        {{-- wire:model.defer="state.city" --}}
+                        >
+                        <optgroup label="Hospital Besar Hajjah Khalsom">
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="Emergency">Emergency</option>
+                        </optgroup>
+                        {{-- <optgroup label="Quebec">
+                           <option value="montreal">Montreal</option>
+                           <option value="qc">Quebec City</option>
+                        </optgroup> --}}
+                    </select>
                 </div>
 
                 <div class="mt-4">
@@ -41,6 +63,8 @@
                     <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" /><br>
                     <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-enter your password" />
                 </div>
+
+                <x-validation-errors class="mb-4" />
 
                 @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
                     <div class="mt-4">

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('on_call_applications', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('user_id');
+            $table->string('department');
             $table->string('reason');
             $table->dateTime('start_date');
             $table->dateTime('end_date');

@@ -81,6 +81,13 @@
                 @endif
             @endif
         </div>
+
+        <!-- Department -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="department" value="{{ __('Department') }}" />
+            <x-input id="department" type="text" class="mt-1 block w-full" wire:model.defer="state.department" autocomplete="department" />
+            <x-input-error for="department" class="mt-2" />
+        </div>
     </x-slot>
 
     <x-slot name="actions">

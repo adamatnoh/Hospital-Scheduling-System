@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>HSS | Department Schedule</title>
+    <title>HSS | Your Schedule</title>
     <link href="{{ asset('import/assets/css/styles.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css" rel="stylesheet"/>  
@@ -27,7 +27,7 @@
         <x-slot name="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 <i class="bi bi-list toggle-sidebar-btn"></i> &nbsp;
-                {{ Auth::user()->department }} Schedule
+                {{ Auth::user()->name }} Schedule
             </h2>
         </x-slot>
 
@@ -37,13 +37,13 @@
             <ul class="sidebar-nav" id="sidebar-nav">
 
             <li class="nav-item">
-                <a class="nav-link " href="">
+                <a class="nav-link collapsed" href="{{ route('calendar.depschedule') }}">
                 <i class="bi bi-building"></i>
                 <span>Department Schedule</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('calendar.yourschedule') }}">
+                <a class="nav-link " href="">
                 <i class="bi bi-calendar-event"></i>
                 <span>Your Schedule</span>
                 </a>

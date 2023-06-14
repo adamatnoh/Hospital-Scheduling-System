@@ -105,14 +105,14 @@
                             <td>Dr Firdaus</td>
                             <td>Leave: Emergency</td>
                             <td>2023-05-25</td>
-                            <td><button type="button" class="btn btn-primary btn-sm">Approve</button>&nbsp;<button type="button" class="btn btn-danger btn-sm">Reject</button></td>
+                            <td><button class="btn btn-primary btn-sm">Approve</button>&nbsp;<button class="btn btn-danger btn-sm">Reject</button></td>
                           </tr>
                           <tr>
                             <th scope="row">2</th>
                             <td>Dr Farah</td>
                             <td>On Call: Preferred</td>
                             <td>2023-05-17</td>
-                            <td><button type="button" class="btn btn-primary btn-sm">Approve</button>&nbsp;<button type="button" class="btn btn-danger btn-sm">Reject</button></td>
+                            <td><button class="btn btn-primary btn-sm">Approve</button>&nbsp;<button class="btn btn-danger btn-sm">Reject</button></td>
                           </tr>
                         </tbody>
                       </table>

@@ -11,15 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('department_schedules', function (Blueprint $table) {
+        Schema::create('wards', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('user_id');
+            $table->string('name');
             $table->string('department');
-            $table->string('ward');
-            $table->string('shift');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
             $table->timestamps();
         });
     }
@@ -29,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('department_schedules');
+        Schema::dropIfExists('wards');
     }
 };

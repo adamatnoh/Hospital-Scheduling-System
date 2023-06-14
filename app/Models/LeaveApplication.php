@@ -9,5 +9,5 @@ class LeaveApplication extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'reason', 'start_date', 'end_date', 'status'];
+    protected $fillable = ['title', 'user_id', 'department', 'reason', 'start_date', 'end_date', 'status'];
 }
