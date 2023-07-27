@@ -1,3 +1,4 @@
+{{-- This is Create Shift Schedule View --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,58 +29,84 @@
         <x-slot name="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 <i class="bi bi-list toggle-sidebar-btn"></i> &nbsp;
-                Create Shift Schedule
+                Create Shift Schedule ({{ Auth::user()->department }})
             </h2>
         </x-slot>
 
         <!-- ======= Sidebar ======= -->
         <aside id="sidebar" class="sidebar">
 
-            <ul class="sidebar-nav" id="sidebar-nav">
+          <ul class="sidebar-nav" id="sidebar-nav">
 
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('calendar.depschedule') }}">
-                <i class="bi bi-building"></i>
-                <span>Department Schedule</span>
+          <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#dep-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-building"></i><span>Department Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="dep-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="{{ route('calendar.depschedule') }}">
+                  <i class="bi bi-grid"></i><span>On Call Schedule</span>
                 </a>
+              </li>
+              <li>
+                <a href="{{ route('calendar.view-ward') }}">
+                  <i class="bi bi-hospital"></i><span>Ward Schedule</span>
+                </a>
+              </li>
+              <li>
+                <a href="{{ route('calendar.view-shift') }}">
+                  <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link collapsed" href="{{ route('calendar.yourschedule') }}">
+              <i class="bi bi-calendar-event"></i>
+              <span>Your Schedule</span>
+              </a>
+          </li>
+          @if (Auth::check() && Auth::user()->role === 'scheduler')
+          <li class="nav-item">
+              <a class="nav-link " data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-pencil"></i><span>Create Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              <ul id="charts-nav" class="nav-content  " data-bs-parent="#sidebar-nav">
+                <li>
+                  <a href="{{ route('create-oncall') }}">
+                    <i class="bi bi-grid"></i><span>On Call Schedule</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('create-ward') }}">
+                    <i class="bi bi-hospital"></i><span>Ward Schedule</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('create-shift') }}">
+                    <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
+                  </a>
+                </li>
+              </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('calendar.yourschedule') }}">
-                <i class="bi bi-calendar-event"></i>
-                <span>Your Schedule</span>
-                </a>
-            </li>
-            @if (Auth::check() && Auth::user()->role === 'scheduler')
-            <li class="nav-item">
-                <a class="nav-link " data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-                  <i class="bi bi-pencil"></i><span>Create Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="charts-nav" class="nav-content  " data-bs-parent="#sidebar-nav">
-                  <li>
-                    <a href="{{ route('create-oncall') }}">
-                      <i class="bi bi-grid "></i><span>On Call Schedule</span>
+              <a class="nav-link collapsed" data-bs-target="#change-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-check-circle"></i><span>Changes Requested</span><i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              <ul id="change-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link collapsed" href="{{ route('review') }}">
+                      <i class="bi bi-check-circle"></i><span>Review Changes Requested</span>
                     </a>
-                  </li>
-                  <li>
-                    <a href="{{ route('create-ward') }}">
-                      <i class="bi bi-hospital"></i><span>Ward Schedule</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ route('create-shift') }}">
-                      <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
-                    </a>
-                  </li>
-                </ul>
-              </li><!-- End Create Schedule Nav -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('review') }}" :active="request()->routeIs('review')">
-                <i class="bi bi-check-circle"></i>
-                <span>Review Changes Requested</span>
-                </a>
+                </li>
+                <li>
+                  <a href="{{ route('reviewHistory') }}">
+                    <i class="bi bi-clock-history"></i><span>Changes Requested History</span>
+                  </a>
+                </li>
+              </ul>
             </li>
             @endif
-            
         </aside><!-- End Sidebar-->
 
         <!-- Modal -->
@@ -134,7 +161,8 @@
                         <br>
                         <div id="calendar"></div>
                         <div class="text-right">
-                            <button id="generate" class="btn btn-primary float-right">Generate New Schedule</button>
+                          <button id="finalize" class="btn btn-success float-right">Finalize</button>
+                          <button id="generate" class="btn btn-primary float-right">Generate New Schedule</button>
                         </div>
                     </div>
                   </div>
@@ -174,49 +202,95 @@
                     displayEventTime: false,
                     selectable: true,
                     selectHelper: true,
-                    // editable: true,
-                    // eventDrop: function(event) {
-                    //     var id = event.id;
-                    //     var start_date = moment(event.start).format('YYYY-MM-DD');
-                    //     var end_date = start_date;
-                    //     $.ajax({
-                    //         url:"{{ route('shift.update', '') }}" +'/'+ id,
-                    //         type:"PATCH",
-                    //         dataType:'json',
-                    //         data:{ start_date, end_date },
-                    //         success:function(response)
-                    //         {
-                    //             swal("Success", "New Date Updated!", "success");
-                    //         },
-                    //         error:function(error)
-                    //         {
-                    //             console.log(error)
-                    //         },
-                    //     });
-                    // },
-                    // eventClick: function(event){
-                    //     $('#modalRemove').modal('toggle');
-                    //     var id = event.id;
-                    //     $('#saveBtn').click(function() {                            
-                    //         $.ajax({
-                    //             url:"{{ route('shift.delete', '') }}" +'/'+ id,
-                    //             type:"DELETE",
-                    //             dataType:'json',
-                    //             success:function(response)
-                    //             {
-                    //                 $('#modalRemove').modal('hide')
-                    //                 $('#calendar').fullCalendar('removeEvents', response);
-                    //                 swal("Success", "The doctor has been removed!", "success");
-                    //                 // swal("Good job!", "Event Deleted!", "success");
-                    //             },
-                    //             error:function(error)
-                    //             {
-                    //                 console.log(error)
-                    //             },
-                    //         });
-                    //     });
-                    // }
+                    editable: true,
+                    eventDrop: function(event) {
+                        var id = event.id;
+                        var start_date = moment(event.start).format('YYYY-MM-DD');
+                        var end_date = start_date;
+                        $.ajax({
+                            url:"{{ route('shift.update', '') }}" +'/'+ id,
+                            type:"PATCH",
+                            dataType:'json',
+                            data:{ start_date, end_date },
+                            success:function(response)
+                            {
+                                swal("Success", "New Date Updated!", "success");
+                            },
+                            error:function(error)
+                            {
+                                console.log(error)
+                            },
+                        });
+                    },
+                    eventClick: function(event){
+                        $('#modalRemove').modal('toggle');
+                        var id = event.id;
+                        $('#saveBtn').click(function() {                            
+                            $.ajax({
+                                url:"{{ route('shift.delete', '') }}" +'/'+ id,
+                                type:"DELETE",
+                                dataType:'json',
+                                success:function(response)
+                                {
+                                    $('#modalRemove').modal('hide')
+                                    $('#calendar').fullCalendar('removeEvents', response);
+                                    swal("Success", "The doctor has been removed!", "success");
+                                    // swal("Good job!", "Event Deleted!", "success");
+                                },
+                                error:function(error)
+                                {
+                                    console.log(error)
+                                },
+                            });
+                        });
+                    }
                 })
+                
+                function updateButtonState() {
+                    var finalizeBtn = $('#finalize');
+                    var generateBtn = $('#generate');
+                    
+                    if (localStorage.getItem('finalizeState3') === 'true') {
+                        generateBtn.prop('disabled', true);
+                        finalizeBtn.text('Edit Schedule');
+                        finalizeBtn.addClass('btn-warning');
+                    } else {
+                        generateBtn.prop('disabled', false);
+                        finalizeBtn.text('Finalize');
+                        finalizeBtn.removeClass('btn-warning');
+                    }
+                }
+
+                // Check for saved state on page load
+                updateButtonState();
+
+                $('#generate').on('click', function() {
+                    $('#modalGenerate').modal('toggle');
+                    $('#saveBtn2').on('click', function() {
+                        // Generate new schedule code...
+
+                        // Reset the button state after generating
+                        localStorage.setItem('finalizeState3', 'false');
+                        updateButtonState();
+                    });
+                });
+
+                $('#finalize').on('click', function() {
+                    var finalizeBtn = $(this);
+                    var generateBtn = $('#generate');
+                    
+                    if (finalizeBtn.text() === 'Finalize') {
+                        generateBtn.prop('disabled', true);
+                        finalizeBtn.text('Edit Schedule');
+                        finalizeBtn.addClass('btn-warning');
+                        localStorage.setItem('finalizeState3', 'true');
+                    } else {
+                        generateBtn.prop('disabled', false);
+                        finalizeBtn.text('Finalize');
+                        finalizeBtn.removeClass('btn-warning');
+                        localStorage.setItem('finalizeState3', 'false');
+                    }
+                });
             });
             
             document.getElementById('generate').addEventListener('click', function() {

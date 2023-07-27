@@ -1,13 +1,14 @@
 <?php
+// This is Shift Model
+    namespace App\Models;
 
-namespace App\Models;
+    use Illuminate\Database\Eloquent\Factories\HasFactory;
+    use Illuminate\Database\Eloquent\Model;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+    class AssignShift extends Model
+    {
+        use HasFactory;
 
-class AssignShift extends Model
-{
-    use HasFactory;
-
-    protected $fillable = ['name', 'user_id', 'department', 'shift', 'start_date', 'end_date'];
-}
+        protected $fillable = ['name', 'user_id', 'department', 'shift', 'start_date', 'end_date'];
+    }
+?>

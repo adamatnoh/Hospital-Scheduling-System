@@ -62,17 +62,42 @@ Route::get('/oncall', [App\Http\Controllers\CalendarController::class, 'oncall']
 Route::post('/leave', [App\Http\Controllers\CalendarController::class, 'storel'])->name('calendar.storeLeave');
 // Store On Call Application routes
 Route::post('/oncall', [App\Http\Controllers\CalendarController::class, 'storeo'])->name('calendar.storeOnCall');
+// History Application routes
+Route::get('/history', [App\Http\Controllers\CalendarController::class, 'history'])->name('calendar.history');
+// Review Changes route
+Route::get('/review', [App\Http\Controllers\CalendarController::class, 'review'])->name('review');
+// Changes History route
+Route::get('/review-history', [App\Http\Controllers\CalendarController::class, 'reviewHistory'])->name('reviewHistory');
+// Update Review Changes Leave route
+Route::patch('/review/update-leave/{id}', [App\Http\Controllers\CalendarController::class, 'updateReviewLeave'])->name('updateReviewLeave');
+// Update Review Changes On Call route
+Route::patch('/review/update-oncall/{id}', [App\Http\Controllers\CalendarController::class, 'updateReviewOnCall'])->name('updateReviewOnCall');
+// Update Review Changes Status Leave route
+Route::patch('/review/update-status-leave/{id}', [App\Http\Controllers\CalendarController::class, 'updateStatusLeave'])->name('updateStatusLeave');
+// Update Review Changes Status On Call route
+Route::patch('/review/update-status-oncall/{id}', [App\Http\Controllers\CalendarController::class, 'updateStatusOnCall'])->name('updateStatusOnCall');
 
-// Department Schedule routes
-Route::get('/department-schedule', [App\Http\Controllers\JoinTableController::class, 'depschedule'])->name('calendar.depschedule');
+// Department On Call Schedule routes
+Route::get('/department-oncall', [App\Http\Controllers\AssignController::class, 'viewOnCall'])->name('calendar.depschedule');
+// Department Ward Schedule routes
+Route::get('/department-ward', [App\Http\Controllers\WardController::class, 'viewWard'])->name('calendar.view-ward');
+// Department Ward Schedule routes
+Route::get('/department-shift', [App\Http\Controllers\ShiftController::class, 'viewShift'])->name('calendar.view-shift');
 // Your Schedule routes
 Route::get('/your-schedule', [App\Http\Controllers\JoinTableController::class, 'yourschedule'])->name('calendar.yourschedule');
 
-// Review Changes routes
-// Route::get('/review', [App\Http\Controllers\CalendarController::class, 'leave'])->name('review');
-Route::get('/review', function () {
-    return view('review');
-})->name('review');;
+// Admin Manage Staff route
+Route::get('/staff', [App\Http\Controllers\AdminController::class, 'manageStaff'])->name('manageStaff');
+// Admin Manage Staff Update route
+Route::post('/staff/update', [App\Http\Controllers\AdminController::class, 'updateStaff'])->name('updateStaff');
+// Admin Get Specific staff route
+Route::get('/getStaff/{id}', [App\Http\Controllers\AdminController::class, 'getStaff'])->name('getStaff');
+// Admin View Add Staff route
+Route::get('/add-staff', function () {return view('addStaff');})->name('staff-form');
+// Admin Add Staff route
+Route::post('/adding', [App\Http\Controllers\AdminController::class, 'addStaff'])->name('addStaff');
+// Admin Delete Staff routes
+Route::delete('/deleteStaff/{id}', [App\Http\Controllers\AdminController::class, 'deleteStaff'])->name('deleteStaff');
 
 Route::middleware([
     'auth:sanctum',

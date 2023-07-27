@@ -1,5 +1,5 @@
 <?php
-
+// THIS IS CREATE WARD SCHEDULE CONTROLLER
 namespace App\Http\Controllers;
 
 use DB;
@@ -17,37 +17,34 @@ class WardController extends Controller
     public function assignWard()
     {
         $userDepartment = Auth::user()->department;
-
+    
         $leaveApplications = DB::table('leave_applications')
             ->select('title', 'user_id', 'department', 'start_date', 'end_date', 'status')
             ->where('department', $userDepartment)
             ->get();
-
+    
         $doctors = DB::table('users')
             ->select('name', 'id', 'department')
             ->where('department', $userDepartment)
             ->get();
-
+    
         $wardLists = DB::table('wards')
             ->select('id', 'name', 'department')
             ->where('department', $userDepartment)
             ->get();
-
-        // $doctors = DB::table('assigns')
-        //     ->select('title', 'user_id', 'department', 'start_date', 'end_date')
-        //     ->where('department', $userDepartment)
-        //     ->get();
-
+    
         AssignWard::truncate();
-
+    
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
-
+    
         $usedDates = [];
-
+    
+        $wardIndex = 0; // Track the current ward index
+    
         foreach ($doctors as $doctor) {
             $currentDate = $startDate->copy();
-        
+    
             while ($currentDate <= $endDate) {
                 // Check if the doctor's name appears in leaveApplications
                 $foundInLeave = false;
@@ -57,49 +54,61 @@ class WardController extends Controller
                         break;
                     }
                 }
-        
+    
                 if ($foundInLeave) {
                     // Skip to the next day if the doctor's name was found in leaveApplications with status 'Yes'
                     $currentDate->addDay();
                     continue;
                 }
-        
-                // If the doctor's name was not found in leaveApplications with status 'Yes', assign a random shift
-                if ($currentDate->isWeekday()) {
-                    $rand = mt_rand(0, count($wardLists) - 1);
-        
-                    AssignWard::create([
-                        'name' => $doctor->name,
-                        'user_id' => $doctor->id,
-                        'department' => $doctor->department,
-                        'ward' => $wardLists[$rand]->name,
-                        'ward_id' => $wardLists[$rand]->id,
-                        'start_date' => $currentDate,
-                        'end_date' => $currentDate,
-                    ]);
-        
-                    $usedDates[] = $currentDate->toDateString(); // Add the used date to the array
-                }
-        
-                $currentDate->addDay();
+    
+                // Assign the ward based on the current ward index
+                $ward = $wardLists[$wardIndex];
+                $wardIndex = ($wardIndex + 1) % count($wardLists); // Increment the ward index and wrap around if necessary
+    
+                // Determine the end date for the two-week assignment
+                $assignmentEndDate = $currentDate->copy()->addWeeks(2)->subDay();
+    
+                AssignWard::create([
+                    'name' => $doctor->name,
+                    'user_id' => $doctor->id,
+                    'department' => $doctor->department,
+                    'ward' => $ward->name,
+                    'ward_id' => $ward->id,
+                    'start_date' => $currentDate,
+                    'end_date' => $assignmentEndDate,
+                ]);
+    
+                $usedDates[] = $currentDate->toDateString(); // Add the used date to the array
+    
+                $currentDate = $assignmentEndDate; // Move to the next day after the end of the assignment
             }
         }
-
+    
         $events = array();
         $schedule = AssignWard::all();
+        $wardColors = array(); // Array to store ward colors
+        $i = 1;
+
         foreach ($schedule as $schedule) {
+            $ward = $schedule->ward;
+            if (!array_key_exists($ward, $wardColors)) {
+                $wardColors[$ward] = '#' . substr(md5($i), 3, 3);
+                $i++;
+            }
+
             $events[] = [
                 'id' => $schedule->id,
-                'title' => 'Dr ' . $schedule->name . PHP_EOL . $schedule->ward,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $ward,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
-                'allDay' => true
+                'allDay' => true,
+                'backgroundColor' => $wardColors[$ward] // Assign the ward color
             ];
         }
-
+    
         return view('calendar.create-ward', ['events' => $events]);
     }
-
+    
     private function generateRandomDate($usedDates)
     {
         $date = Carbon::now()->addDays(mt_rand(1, 30));
@@ -115,17 +124,54 @@ class WardController extends Controller
     {
         $events = array();
         $schedule = AssignWard::all();
+        $wardColors = array(); // Array to store ward colors
+        $i = 1;
+
         foreach ($schedule as $schedule) {
+            $ward = $schedule->ward;
+            if (!array_key_exists($ward, $wardColors)) {
+                $wardColors[$ward] = '#' . substr(md5($i), 3, 3);
+                $i++;
+            }
+
             $events[] = [
                 'id' => $schedule->id,
-                'title' => 'Dr ' . $schedule->name . PHP_EOL . $schedule->ward,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $ward,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
-                'allDay' => true
+                'allDay' => true,
+                'backgroundColor' => $wardColors[$ward] // Assign the ward color
             ];
         }
 
         return view('calendar.create-ward', ['events' => $events]);
+    }
+
+    public function viewWard()
+    {
+        $events = array();
+        $schedule = AssignWard::all();
+        $wardColors = array(); // Array to store ward colors
+        $i = 1;
+
+        foreach ($schedule as $schedule) {
+            $ward = $schedule->ward;
+            if (!array_key_exists($ward, $wardColors)) {
+                $wardColors[$ward] = '#' . substr(md5($i), 3, 3);
+                $i++;
+            }
+
+            $events[] = [
+                'id' => $schedule->id,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $ward,
+                'start' => $schedule->start_date,
+                'end' => $schedule->end_date,
+                'allDay' => true,
+                'backgroundColor' => $wardColors[$ward] // Assign the ward color
+            ];
+        }
+
+        return view('calendar.view-ward', ['events' => $events]);
     }
 
     public function update(Request $request, $id)

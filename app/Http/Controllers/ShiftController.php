@@ -1,5 +1,5 @@
 <?php
-
+// THIS IS CREATE SHIFT SCHEDULE CONTROLLER
 namespace App\Http\Controllers;
 
 use DB;
@@ -33,10 +33,15 @@ class ShiftController extends Controller
         $endDate = Carbon::now()->endOfMonth();
 
         $usedDates = [];
+        $shiftCounts = [
+            'Morning' => 0,
+            'Evening' => 0,
+            'Night' => 0
+        ];
 
         foreach ($doctors as $doctor) {
             $currentDate = $startDate->copy();
-        
+
             while ($currentDate <= $endDate) {
                 // Check if the doctor's name appears in leaveApplications
                 $foundInLeave = false;
@@ -46,18 +51,24 @@ class ShiftController extends Controller
                         break;
                     }
                 }
-        
+
                 if ($foundInLeave) {
                     // Skip to the next day if the doctor's name was found in leaveApplications with status 'Yes'
                     $currentDate->addDay();
                     continue;
                 }
-        
-                // If the doctor's name was not found in leaveApplications with status 'Yes', assign a random shift
+
+                // If the doctor's name was not found in leaveApplications with status 'Yes', assign a shift
                 if ($currentDate->isWeekday()) {
-                    $shiftIndex = array_rand($shifts);
-                    $shift = $shifts[$shiftIndex];
-        
+                    // Determine the shift with the fewest assigned doctors
+                    $minShiftCount = min($shiftCounts);
+                    $minShifts = array_keys($shiftCounts, $minShiftCount);
+                    $shiftIndex = array_rand($minShifts);
+                    $shift = $minShifts[$shiftIndex];
+
+                    // Update the shift count
+                    $shiftCounts[$shift]++;
+
                     AssignShift::create([
                         'name' => $doctor->name,
                         'user_id' => $doctor->id,
@@ -66,29 +77,46 @@ class ShiftController extends Controller
                         'start_date' => $currentDate,
                         'end_date' => $currentDate,
                     ]);
-        
+
                     $usedDates[] = $currentDate->toDateString(); // Add the used date to the array
                 }
-        
+
                 $currentDate->addDay();
             }
         }
 
         $events = array();
         $schedule = AssignShift::all();
+        $shiftColors = [
+            'Morning' => '#8da399', // Define color for Morning shift
+            'Evening' => '#d65302', // Define color for Evening shift
+            'Night' => '#311F62' // Define color for Night shift
+        ];
+
         foreach ($schedule as $schedule) {
+            $shift = $schedule->shift;
+
+            // Check if the shift has a defined color
+            if (array_key_exists($shift, $shiftColors)) {
+                $backgroundColor = $shiftColors[$shift];
+            } else {
+                // If shift color is not defined, use a default color
+                $backgroundColor = '#cccccc';
+            }
+
             $events[] = [
                 'id' => $schedule->id,
-                'title' => 'Dr ' . $schedule->name . PHP_EOL . $schedule->shift,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $shift,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
-                'allDay' => true
+                'allDay' => true,
+                'backgroundColor' => $backgroundColor // Assign the shift color
             ];
         }
 
         return view('calendar.create-shift', ['events' => $events]);
     }
-
+    
     private function generateRandomDate($usedDates)
     {
         $date = Carbon::now()->addDays(mt_rand(1, 30));
@@ -104,17 +132,68 @@ class ShiftController extends Controller
     {
         $events = array();
         $schedule = AssignShift::all();
-        foreach($schedule as $schedule) {
+        $shiftColors = array(
+            'Morning' => '#8da399', // Define color for Morning shift
+            'Evening' => '#d65302', // Define color for Evening shift
+            'Night' => '#311F62' // Define color for Night shift
+        );
+
+        foreach ($schedule as $schedule) {
+            $shift = $schedule->shift;
+
+            // Check if the shift has a defined color
+            if (array_key_exists($shift, $shiftColors)) {
+                $backgroundColor = $shiftColors[$shift];
+            } else {
+                // If shift color is not defined, use a default color
+                $backgroundColor = '#cccccc';
+            }
+
             $events[] = [
                 'id' => $schedule->id,
-                'title' => 'Dr ' . $schedule->name . PHP_EOL . $schedule->shift,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $shift,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
-                'allDay' => true
+                'allDay' => true,
+                'backgroundColor' => $backgroundColor // Assign the shift color
             ];
         }
 
         return view('calendar.create-shift', ['events' => $events]);
+    }
+
+    public function ViewShift()
+    {
+        $events = array();
+        $schedule = AssignShift::all();
+        $shiftColors = array(
+            'Morning' => '#8da399', // Define color for Morning shift
+            'Evening' => '#d65302', // Define color for Evening shift
+            'Night' => '#311F62' // Define color for Night shift
+        );
+
+        foreach ($schedule as $schedule) {
+            $shift = $schedule->shift;
+
+            // Check if the shift has a defined color
+            if (array_key_exists($shift, $shiftColors)) {
+                $backgroundColor = $shiftColors[$shift];
+            } else {
+                // If shift color is not defined, use a default color
+                $backgroundColor = '#cccccc';
+            }
+
+            $events[] = [
+                'id' => $schedule->id,
+                'title' => 'Dr ' . $schedule->name . PHP_EOL . $shift,
+                'start' => $schedule->start_date,
+                'end' => $schedule->end_date,
+                'allDay' => true,
+                'backgroundColor' => $backgroundColor // Assign the shift color
+            ];
+        }
+
+        return view('calendar.view-shift', ['events' => $events]);
     }
 
     public function update(Request $request, $id)

@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>HSS | Your Schedule</title>
     <link href="{{ asset('import/assets/css/styles.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/print.css') }}" rel="stylesheet" media="print">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css" rel="stylesheet"/>  
     <link href="{{ asset('import/assets/vendors/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -27,58 +28,84 @@
         <x-slot name="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 <i class="bi bi-list toggle-sidebar-btn"></i> &nbsp;
-                {{ Auth::user()->name }} Schedule
+                Dr {{ Auth::user()->name }} Schedule
             </h2>
         </x-slot>
 
         <!-- ======= Sidebar ======= -->
         <aside id="sidebar" class="sidebar">
 
-            <ul class="sidebar-nav" id="sidebar-nav">
+          <ul class="sidebar-nav" id="sidebar-nav">
 
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('calendar.depschedule') }}">
-                <i class="bi bi-building"></i>
-                <span>Department Schedule</span>
+          <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#dep-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-building"></i><span>Department Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="dep-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="{{ route('calendar.depschedule') }}">
+                  <i class="bi bi-grid"></i><span>On Call Schedule</span>
                 </a>
+              </li>
+              <li>
+                <a href="{{ route('calendar.view-ward') }}">
+                  <i class="bi bi-hospital"></i><span>Ward Schedule</span>
+                </a>
+              </li>
+              <li>
+                <a href="{{ route('calendar.view-shift') }}">
+                  <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link " href="{{ route('calendar.yourschedule') }}">
+              <i class="bi bi-calendar-event"></i>
+              <span>Your Schedule</span>
+              </a>
+          </li>
+          @if (Auth::check() && Auth::user()->role === 'scheduler')
+          <li class="nav-item">
+              <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-pencil"></i><span>Create Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              <ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                  <a href="{{ route('create-oncall') }}">
+                    <i class="bi bi-grid"></i><span>On Call Schedule</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('create-ward') }}">
+                    <i class="bi bi-hospital"></i><span>Ward Schedule</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('create-shift') }}">
+                    <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
+                  </a>
+                </li>
+              </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link " href="">
-                <i class="bi bi-calendar-event"></i>
-                <span>Your Schedule</span>
-                </a>
-            </li>
-            @if (Auth::check() && Auth::user()->role === 'scheduler')
-            <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-                  <i class="bi bi-pencil"></i><span>Create Schedule</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                  <li>
-                    <a href="{{ route('create-oncall') }}">
-                      <i class="bi bi-grid"></i><span>On Call Schedule</span>
+              <a class="nav-link collapsed" data-bs-target="#change-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-check-circle"></i><span>Changes Requested</span><i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              <ul id="change-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link collapsed" href="{{ route('review') }}">
+                      <i class="bi bi-check-circle"></i><span>Review Changes Requested</span>
                     </a>
-                  </li>
-                  <li>
-                    <a href="{{ route('create-ward') }}">
-                      <i class="bi bi-hospital"></i><span>Ward Schedule</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="">
-                      <i class="bi bi-person-workspace"></i><span>Shift Schedule</span>
-                    </a>
-                  </li>
-                </ul>
-              </li><!-- End Create Schedule Nav -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="{{ route('review') }}" :active="request()->routeIs('review')">
-                <i class="bi bi-check-circle"></i>
-                <span>Review Changes Requested</span>
-                </a>
+                </li>
+                <li>
+                  <a href="{{ route('reviewHistory') }}">
+                    <i class="bi bi-clock-history"></i><span>Changes Requested History</span>
+                  </a>
+                </li>
+              </ul>
             </li>
             @endif
-            
         </aside><!-- End Sidebar-->
                
         <main id="main" class="main">
@@ -91,6 +118,9 @@
                     <div class="card-body">
                         <br>
                         <div id="calendar"></div>
+                        <div class="text-right">
+                          <button id="print" class="btn btn-primary float-right"><i class="bi bi-printer-fill"></i> Print Schedule</button>
+                        </div>
                     </div>
                   </div>
                 </div> 
@@ -122,7 +152,11 @@
                     displayEventTime: false,
                     selectable: true,
                     selectHelper: true,
-                })
+                });
+
+                $('#print').on('click', function() {
+                    window.print();
+                });
             });
         </script>
         <script src="{{ asset('import/assets/vendors/apexcharts/apexcharts.min.js') }}"></script>

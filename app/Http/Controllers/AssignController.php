@@ -1,5 +1,5 @@
 <?php
-
+// THIS IS CREATE ONCALL SCHEDULE CONTROLLER
 namespace App\Http\Controllers;
 
 use DB;
@@ -7,8 +7,10 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DepartmentSchedule;
+use App\Models\LeaveApplication;
 use App\Models\OnCallApplication;
 use App\Models\Assign;
+use App\Models\User;
 
 class AssignController extends Controller
 {
@@ -17,13 +19,14 @@ class AssignController extends Controller
         $userDepartment = Auth::user()->department;
 
         $leaveApplications = DB::table('leave_applications')
-            ->select('title', 'user_id', 'department', 'start_date', 'end_date')
-            ->where('status', 'No')
+            ->select('user_id', 'start_date')
+            ->where('status', 'Yes')
             ->where('department', $userDepartment)
-            ->get();
+            ->pluck('user_id')
+            ->toArray();
 
         $onCallApplications = DB::table('on_call_applications')
-            ->select('title', 'user_id', 'department', 'start_date', 'end_date')
+            ->select('user_id', 'start_date')
             ->where('status', 'Yes')
             ->where('department', $userDepartment)
             ->get();
@@ -31,117 +34,135 @@ class AssignController extends Controller
         $otherDoctors = DB::table('users')
             ->select('name', 'id', 'department')
             ->where('department', $userDepartment)
+            ->whereNotIn('id', $leaveApplications)
+            ->orWhere(function ($query) use ($onCallApplications) {
+                    $query->whereIn('id', $onCallApplications->pluck('user_id')->toArray());
+                })
             ->get();
-
+        
         Assign::truncate();
 
         $usedDates = [];
+        $oncallDates = [];
 
-        // Create Assign records for each available doctor
-        // foreach ($leaveApplications as $leave) {
-        //     $startDate = $this->generateRandomDate($usedDates);
-        //     $endDate = $startDate->copy();
-
-        //     $approvedLeave = $leaveApplications->where('start_date', $startDate);
-        //     if (!$approvedLeave) {
-        //         Assign::create([
-        //             'title' => $leave->title,
-        //             'user_id' => $leave->user_id,
-        //             'department' => $leave->department,
-        //             'start_date' => $startDate,
-        //             'end_date' => $endDate,
-        //         ]);
-
-        //         $usedDates[] = $startDate->toDateString(); // Add the used date to the array
-        //     }
-        // }
-
-        // foreach ($onCallApplications as $onCall) {
-        //     Assign::create([
-        //         'title' => $onCall->title,
-        //         'user_id' => $onCall->user_id,
-        //         'department' => $onCall->department,
-        //         'start_date' => $onCall->start_date,
-        //         'end_date' => $onCall->end_date,
-        //     ]);
-
-        //     $usedDates[] = $startDate->toDateString(); 
-        // }
-
-        foreach ($otherDoctors as $doctor) {
-            // Check if the doctor's name appears in leaveApplications
-            $foundInLeave = false;
-            foreach ($leaveApplications as $leave)  {
-                if ($doctor->name == $leave->title) {
-                    $startDate = $this->generateRandomDate($usedDates);
-                    $endDate = $startDate->copy();
-
-                    $approvedLeave = $leaveApplications->where('start_date', $startDate);
-                    if (!$approvedLeave) {
-                        Assign::create([
-                            'title' => $leave->title,
-                            'user_id' => $leave->user_id,
-                            'department' => $leave->department,
-                            'start_date' => $startDate,
-                            'end_date' => $endDate,
-                        ]);
-
-                        $usedDates[] = $startDate->toDateString(); // Add the used date to the array
-                        $foundInLeave = true;
-                        break;
-                    }
-                }
-            }
-        
-            if ($foundInLeave) {
-                // Skip to the next doctor if the name was found in leaveApplications
-                continue;
-            }
-            
-            // Check if the doctor's name appears in onCallApplications
-            $foundInOnCall = false;
-            foreach ($onCallApplications as $onCall) {
-                if ($doctor->name == $onCall->title) {
-                    Assign::create([
-                        'title' => $onCall->title,
-                        'user_id' => $onCall->user_id,
-                        'department' => $onCall->department,
-                        'start_date' => $onCall->start_date,
-                        'end_date' => $onCall->end_date,
-                    ]);
-                    $usedDates[] = Carbon::parse($onCall->start_date)->toDateString();
-                    $foundInOnCall = true;
-                    break;
-                }
-            }
-        
-            if ($foundInOnCall) {
-                // Skip to the next doctor if the name was found in onCallApplications
-                continue;
-            }
-        
-            // If the name was not found in onCallApplications, assign random dates
-            $startDate = $this->generateRandomDate($usedDates);
+        // Assign doctors for the specific dates requested in onCallApplications
+        foreach ($onCallApplications as $onCall) {
+            $startDate = Carbon::parse($onCall->start_date)->startOfDay();
             $endDate = $startDate->copy();
-        
+
             Assign::create([
-                'title' => $doctor->name,
-                'user_id' => $doctor->id,
-                'department' => $doctor->department,
+                'title' => User::where('id', $onCall->user_id)->value('name'),
+                'user_id' => $onCall->user_id,
+                'department' => $userDepartment,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ]);
-        
-            $usedDates[] = $startDate->toDateString(); // Add the used date to the array
-        }
-        
 
-        $events = array();
+            $usedDates[$startDate->toDateString()][] = $onCall->user_id; // Add the used date and doctor's ID to the array
+            $oncallDates[] = $startDate->toDateString();
+        }
+
+        // Assign doctors for each day
+        $startDate = Carbon::now()->startOfDay();
+        $endDate = $startDate->copy()->addDays(30);
+
+        $maxAssignmentsPerMonth = 6;
+
+        while ($startDate <= $endDate) {
+            $currentDate = $startDate->toDateString();
+
+            if (!in_array($currentDate, $oncallDates)) {
+                // Check if the requested doctor is available for the current date
+                $requestedDoctor = $onCallApplications->where('start_date', $currentDate)->first();
+
+                $assignedDoctors = [];
+
+                // If the requested doctor is available, assign the doctor
+                if ($requestedDoctor) {
+                    $assignedDoctors[] = $requestedDoctor->user_id;
+                } else {
+                    // Get available doctors for the current date
+                    $availableDoctors = $otherDoctors->reject(function ($doctor) use ($leaveApplications, $usedDates, $currentDate, $maxAssignmentsPerMonth) {
+                        $doctorAssignments = $usedDates[$currentDate] ?? [];
+                        return count($doctorAssignments) >= $maxAssignmentsPerMonth;
+                    });
+
+                    while (count($assignedDoctors) < 2 && $availableDoctors->count() > 0) {
+                        $randomDoctor = $availableDoctors->random();
+
+                        // Check if the random doctor is already assigned for the current date
+                        if (!in_array($randomDoctor->id, $usedDates[$currentDate] ?? [])) {
+                            $assignedDoctors[] = $randomDoctor->id;
+                        }
+
+                        $availableDoctors = $availableDoctors->reject(function ($doctor) use ($assignedDoctors) {
+                            return in_array($doctor->id, $assignedDoctors);
+                        });
+                    }
+                }
+
+                // Assign doctors for the current date
+                if (count($assignedDoctors) == 2) {
+                    foreach ($assignedDoctors as $doctorId) {
+                        Assign::create([
+                            'title' => User::where('id', $doctorId)->value('name'),
+                            'user_id' => $doctorId,
+                            'department' => $userDepartment,
+                            'start_date' => $startDate,
+                            'end_date' => $startDate,
+                        ]);
+
+                        $usedDates[$currentDate][] = $doctorId; // Add the used date and doctor's ID to the array
+                    }
+                }
+            }
+            else {
+                $requestedDoctor = $onCallApplications->where('start_date', $currentDate)->first();
+
+                $assignedDoctors = [];
+
+                // If the requested doctor is available, assign the doctor
+                if ($requestedDoctor) {
+                    $assignedDoctors[] = $requestedDoctor->user_id;
+                } else {
+                    // Get available doctors for the current date
+                    $availableDoctors = $otherDoctors->reject(function ($doctor) use ($leaveApplications, $usedDates, $currentDate, $maxAssignmentsPerMonth) {
+                        $doctorAssignments = $usedDates[$currentDate] ?? [];
+                        return count($doctorAssignments) >= $maxAssignmentsPerMonth;
+                    });
+
+                    $randomDoctor = $availableDoctors->random();
+
+                    // Check if the random doctor is already assigned for the current date
+                    if (!in_array($randomDoctor->id, $usedDates[$currentDate] ?? [])) {
+                        $assignedDoctors[] = $randomDoctor->id;
+                    }
+
+                    $availableDoctors = $availableDoctors->reject(function ($doctor) use ($assignedDoctors) {
+                        return in_array($doctor->id, $assignedDoctors);
+                    });
+                }
+
+                Assign::create([
+                    'title' => User::where('id', $doctorId)->value('name'),
+                    'user_id' => $doctorId,
+                    'department' => $userDepartment,
+                    'start_date' => $startDate,
+                    'end_date' => $startDate,
+                ]);
+
+                $usedDates[$currentDate][] = $doctorId; // Add the used date and doctor's ID to the array
+            }
+
+            $startDate->addDay();
+        }
+
+        $events = [];
         $schedule = Assign::all();
         foreach ($schedule as $schedule) {
             $events[] = [
                 'id' => $schedule->id,
-                'title' => 'Dr ' . $schedule->title,
+                'title' => $schedule->title,
                 'start' => $schedule->start_date,
                 'end' => $schedule->end_date,
                 'allDay' => true
@@ -154,14 +175,14 @@ class AssignController extends Controller
     private function generateRandomDate($usedDates)
     {
         $date = Carbon::now()->addDays(mt_rand(1, 30));
-
+    
         while (in_array($date->toDateString(), $usedDates)) {
             $date = Carbon::now()->addDays(mt_rand(1, 30));
         }
-
+    
         return $date;
     }
-
+     
     public function oncall()
     {
         $events = array();
@@ -177,6 +198,23 @@ class AssignController extends Controller
         }
 
         return view('calendar.create-oncall', ['events' => $events]);
+    }
+
+    public function ViewOnCall()
+    {
+        $events = array();
+        $schedule = Assign::all();
+        foreach($schedule as $schedule) {
+            $events[] = [
+                'id' => $schedule->id,
+                'title' => 'Dr ' . $schedule->title,
+                'start' => $schedule->start_date,
+                'end' => $schedule->end_date,
+                'allDay' => true
+            ];
+        }
+
+        return view('calendar.depschedule', ['events' => $events]);
     }
 
     public function update(Request $request, $id)

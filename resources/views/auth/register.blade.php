@@ -26,8 +26,8 @@
                 </div>
 
                 <div>
-                    <x-input id="role" type="hidden" value="regular" />
-                </div>
+                    <x-input id="role" type="hidden" name="role" value="regular" />
+               </div>
 
                 {{-- <div class="mt-4">
                     <x-label for="department" value="{{ __('Department') }}" /><br>
@@ -35,9 +35,7 @@
                 </div> --}}
                 <div class="col-span-6 sm:col-span-4 mt-4">
                     <x-label for="department" value="{{ __('Department') }}" /><br>
-                    <select name="department" id="department" class="block w-full mt-1"
-                        {{-- wire:model.defer="state.city" --}}
-                        >
+                    <select name="department" id="department" class="block w-full mt-1">
                         <optgroup label="Hospital Besar Hajjah Khalsom">
                             <option value="Orthopedics">Orthopedics</option>
                             <option value="Emergency">Emergency</option>
