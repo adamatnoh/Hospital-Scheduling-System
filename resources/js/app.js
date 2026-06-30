@@ -1,9 +1,23 @@
 import './bootstrap';
+import '../css/app.css';
 
-import Alpine from 'alpinejs';
-import focus from '@alpinejs/focus';
-window.Alpine = Alpine;
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
-Alpine.plugin(focus);
+const appName = import.meta.env.VITE_APP_NAME || 'Hospital Scheduling';
 
-Alpine.start();
+createInertiaApp({
+    title: (title) => `${title} - ${appName}`,
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    setup({ el, App, props, plugin }) {
+        return createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .use(ZiggyVue)
+            .mount(el);
+    },
+    progress: {
+        color: '#0ea5e9',
+    },
+});

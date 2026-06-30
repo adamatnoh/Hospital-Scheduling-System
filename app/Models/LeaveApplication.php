@@ -1,14 +1,25 @@
 <?php
-// This is Leave Application Model
-    namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\Model;
+namespace App\Models;
 
-    class LeaveApplication extends Model
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class LeaveApplication extends Model
+{
+    protected $fillable = [
+        'title',
+        'user_id',
+        'department',
+        'reason',
+        'start_date',
+        'end_date',
+        'status',
+        'rejection',
+    ];
+
+    public function user(): BelongsTo
     {
-        use HasFactory;
-
-        protected $fillable = ['title', 'user_id', 'department', 'reason', 'start_date', 'end_date', 'status', 'rejection'];
+        return $this->belongsTo(User::class, 'user_id');
     }
-?>
+}

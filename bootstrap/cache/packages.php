@@ -1,13 +1,9 @@
 <?php return array (
-  'jenssegers/agent' => 
+  'inertiajs/inertia-laravel' => 
   array (
     'providers' => 
     array (
-      0 => 'Jenssegers\\Agent\\AgentServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Agent' => 'Jenssegers\\Agent\\Facades\\Agent',
+      0 => 'Inertia\\ServiceProvider',
     ),
   ),
   'laravel/fortify' => 
@@ -22,6 +18,13 @@
     'providers' => 
     array (
       0 => 'Laravel\\Jetstream\\JetstreamServiceProvider',
+    ),
+  ),
+  'laravel/passkeys' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Passkeys\\PasskeysServiceProvider',
     ),
   ),
   'laravel/sail' => 
@@ -43,17 +46,6 @@
     'providers' => 
     array (
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
-    ),
-  ),
-  'livewire/livewire' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Livewire\\LivewireServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Livewire' => 'Livewire\\Livewire',
     ),
   ),
   'nesbot/carbon' => 
@@ -79,13 +71,20 @@
   ),
   'spatie/laravel-ignition' => 
   array (
+    'aliases' => 
+    array (
+      'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
     'providers' => 
     array (
       0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
-    'aliases' => 
+  ),
+  'tightenco/ziggy' => 
+  array (
+    'providers' => 
     array (
-      'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+      0 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
     ),
   ),
 );

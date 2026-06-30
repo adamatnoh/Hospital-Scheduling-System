@@ -1,14 +1,34 @@
 <?php
-// This is Ward Model
-    namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\Model;
+namespace App\Models;
 
-    class AssignWard extends Model
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class AssignWard extends Model
+{
+    protected $fillable = [
+        'name',
+        'user_id',
+        'department',
+        'ward',
+        'ward_id',
+        'start_date',
+        'end_date',
+    ];
+
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
+
+    public function user(): BelongsTo
     {
-        use HasFactory;
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
-        protected $fillable = ['name', 'user_id', 'department', 'ward', 'ward_id', 'start_date', 'end_date'];
+    public function wardModel(): BelongsTo
+    {
+        return $this->belongsTo(Wards::class, 'ward_id');
+    }
 }
-?>
